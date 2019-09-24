@@ -52,7 +52,9 @@ public class TheClaimMain {
         // STEP 2: Iterate through each character, stopping at 'A'
         for (int row = 0; row < inputList.length; row++) {
             for (int col = 0; col < inputList.length; col++) {
-                checkForSquare(row, col, inputList, squareVals);
+                if (inputList[row][col] == 'A') {
+                    checkForSquare(row, col, inputList, squareVals);
+                }
             }
         }
         for (int val : squareVals) {
