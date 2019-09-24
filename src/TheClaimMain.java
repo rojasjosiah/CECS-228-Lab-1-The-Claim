@@ -1,32 +1,5 @@
-/*
- * 1) Create 2D array for grid, each line of file row
- * 2) Iterate through each character, stopping at 'A'
- * 3) For each A in that row, check if there's an 'A' at each
- *    point with corresponding coordinates of the two you already have
- * 4) For each of those potential points, test if there's an empty
- *    point that would complete the square
- * 5) Compute the size of that potential square
- * 6) Test if it's bigger than the one you already have
- * 7) If yes, overwrite, otherwise, continue algorithm
- * 8) Print final solution values
- *
- *
- * Ideas
- *  - Check if you can blacklist certain points already tested
- *    if would speed up algorithm
- *  - vars to store temporary points
- *  - only check to the right and down? prob not
- *    bc then if top corner is missing you screwed, but much faster.
- *          -> actually could be fine as long as after finding second
- *             you check both sides
- *          -> right now I'm saying only check below and right, then test
- *             for third point at like 4(?) other locations
- */
-
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.Scanner;
-import java.io.File;
-import java.lang.Math;
 
 public class TheClaimMain {
     public static void main(String[] args) throws FileNotFoundException {
@@ -39,9 +12,9 @@ public class TheClaimMain {
         String tempLine = scnr.nextLine();
         int arrayLength = tempLine.length();
         char[][] inputList = new char[arrayLength][arrayLength];
-        // FIXME: Temporary redundancy since first line read to determine length and would be skipped in next loop
+        // redundancy since first line read to determine length and would be skipped in next loop, iterates first column
         for (int column = 0; column < arrayLength; column++) { inputList[0][column] = tempLine.charAt(column); }
-        //iterates through each row (except first) and column to add each char to an array
+        // iterates through each row (except first) and column to add each char to an array
         for (int row = 1; row < arrayLength; row++) {
             tempLine = scnr.nextLine();
             for (int column = 0; column < arrayLength; column++) {
@@ -57,8 +30,15 @@ public class TheClaimMain {
                 }
             }
         }
-        for (int val : squareVals) {
-            System.out.println(val);
+        // writes to output file
+        try {
+            PrintWriter writer = new PrintWriter("output.txt");
+            for (int i = 0; i < squareVals.length - 1; i++) {
+                writer.println(squareVals[i] + 1);
+            }
+            writer.close();
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -68,25 +48,45 @@ public class TheClaimMain {
         int potentialSquareArea;
         for (int r = row; r < list.length; r++) {
             if (list[r][col] == 'A') {
-                for (int c = 0; c < list.length; c++) {
-                    if (list[r][c] == 'A') {
-                        // STEP 4: For each of those potential points, test if there's an empty
-                        // point that would complete the square
-                        if (list[row][c] == '*') {
-                            // calculate area based on distance between the sides of points
-                            potentialSquareArea = (Math.abs(row - r) * Math.abs(col - c));
-                            if (potentialSquareArea > currentSquare[8]) {
-                                // FIXME: Hate doing this, but java can't replace all array vals at once?
-                                currentSquare[0] = row;
-                                currentSquare[1] = col;
-                                currentSquare[2] = r;
-                                currentSquare[3] = col;
-                                currentSquare[4] = r;
-                                currentSquare[5] = c;
-                                currentSquare[6] = row;
-                                currentSquare[7] = c;
-                                currentSquare[8] = potentialSquareArea;
-                            }
+                int sideLength = r - row;
+                // test for col + sideLength (downwards)
+                if (col + sideLength < list.length && list[r][col + sideLength] == 'A') {
+                    // STEP 4: For each of those potential points, test if there's an empty
+                    // point that would complete the square
+                    if (list[row][col + sideLength] == '*') {
+                        // calculate area based on distance between sides of points
+                        potentialSquareArea = (sideLength * sideLength);
+                        if (potentialSquareArea > currentSquare[8]) {
+                            // Hate doing this, but java can't replace all array vals at once from what I've seen
+                            currentSquare[0] = row;
+                            currentSquare[1] = col;
+                            currentSquare[2] = r;
+                            currentSquare[3] = col;
+                            currentSquare[4] = r;
+                            currentSquare[5] = col + sideLength;
+                            currentSquare[6] = row;
+                            currentSquare[7] = col + sideLength;
+                            currentSquare[8] = potentialSquareArea;
+                        }
+                    }
+                }
+                // test for col - sideLength (upwards)
+                if (col - sideLength >= 0 && list[r][col - sideLength] == 'A') {
+                    // STEP 4: For each of those potential points, test if there's an empty
+                    // point that would complete the square
+                    if (list[row][col - sideLength] == '*') {
+                        // calculate area based on distance between sides of points
+                        potentialSquareArea = (sideLength * sideLength);
+                        if (potentialSquareArea > currentSquare[8]) {
+                            currentSquare[0] = row;
+                            currentSquare[1] = col;
+                            currentSquare[2] = r;
+                            currentSquare[3] = col;
+                            currentSquare[4] = r;
+                            currentSquare[5] = col - sideLength;
+                            currentSquare[6] = row;
+                            currentSquare[7] = col - sideLength;
+                            currentSquare[8] = potentialSquareArea;
                         }
                     }
                 }
@@ -94,25 +94,44 @@ public class TheClaimMain {
         }
         for (int c = col; c < list.length; c++) {
             if (list[row][c] == 'A') {
-                for (int r = 0; r < list.length; r++) {
-                    if (list[r][c] == 'A') {
-                        // STEP 4: For each of those potential points, test if there's an empty
-                        // point that would complete the square
-                        if (list[r][col] == '*') {
-                            // calculate area based on distance between sides of points
-                            potentialSquareArea = (Math.abs(row - r) * Math.abs(col - c));
-                            if (potentialSquareArea > currentSquare[8]) {
-                                // FIXME: Hate doing this, but java can't replace all array vals at once?
-                                currentSquare[0] = row;
-                                currentSquare[1] = col;
-                                currentSquare[2] = r;
-                                currentSquare[3] = col;
-                                currentSquare[4] = r;
-                                currentSquare[5] = c;
-                                currentSquare[6] = row;
-                                currentSquare[7] = c;
-                                currentSquare[8] = potentialSquareArea;
-                            }
+                int sideLength = c - col;
+                // test for row + sideLength (towards right)
+                if (row + sideLength < list.length && list[row + sideLength][c] == 'A') {
+                    // STEP 4: For each of those potential points, test if there's an empty
+                    // point that would complete the square
+                    if (list[row + sideLength][col] == '*') {
+                        // calculate area based on distance between sides of points
+                        potentialSquareArea = (sideLength * sideLength);
+                        if (potentialSquareArea > currentSquare[8]) {
+                            currentSquare[0] = row;
+                            currentSquare[1] = col;
+                            currentSquare[2] = row + sideLength;
+                            currentSquare[3] = col;
+                            currentSquare[4] = row + sideLength;
+                            currentSquare[5] = c;
+                            currentSquare[6] = row;
+                            currentSquare[7] = c;
+                            currentSquare[8] = potentialSquareArea;
+                        }
+                    }
+                }
+                // test for row - sideLength (towards left)
+                if (row - sideLength >= 0 && list[row - sideLength][c] == 'A') {
+                    // STEP 4: For each of those potential points, test if there's an empty
+                    // point that would complete the square
+                    if (list[row - sideLength][col] == '*') {
+                        // calculate area based on distance between sides of points
+                        potentialSquareArea = (sideLength * sideLength);
+                        if (potentialSquareArea > currentSquare[8]) {
+                            currentSquare[0] = row;
+                            currentSquare[1] = col;
+                            currentSquare[2] = row - sideLength;
+                            currentSquare[3] = col;
+                            currentSquare[4] = row - sideLength;
+                            currentSquare[5] = c;
+                            currentSquare[6] = row;
+                            currentSquare[7] = c;
+                            currentSquare[8] = potentialSquareArea;
                         }
                     }
                 }
